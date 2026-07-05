@@ -1,4 +1,4 @@
-model Transaction {
+model transaction {
   id          String   @id @default(cuid())
   userId      String
   type        String

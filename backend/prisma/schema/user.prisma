@@ -6,5 +6,5 @@ model user {
   currency  String        @default("INR")
   createdAt DateTime      @default(now())
   updatedAt DateTime @updatedAt
-  transactions Transaction[]
+  transactions transaction[]
 }

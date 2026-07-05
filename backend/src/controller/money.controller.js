@@ -47,7 +47,7 @@ export const addTransaction = async (req, res) => {
     res.status(201).json({ message: "Transaction added", transaction });
   } catch (error) {
     console.error("Add transaction error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
 
@@ -78,7 +78,7 @@ export const getTransactions = async (req, res) => {
     res.status(200).json({ transactions });
   } catch (error) {
     console.error("Get transactions error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
 
@@ -104,7 +104,7 @@ export const deleteTransaction = async (req, res) => {
     res.status(200).json({ message: "Transaction deleted" });
   } catch (error) {
     console.error("Delete transaction error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
 
@@ -136,6 +136,6 @@ export const getTransactionSummary = async (req, res) => {
     });
   } catch (error) {
     console.error("Get summary error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };

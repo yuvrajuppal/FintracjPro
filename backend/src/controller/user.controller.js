@@ -41,7 +41,7 @@ export const signupController = async (req, res) => {
     res.status(201).json({ message: "Signup successful", user: userWithoutPassword });
   } catch (error) {
     console.error("Signup error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
 
@@ -76,7 +76,7 @@ export const loginController = async (req, res) => {
     res.status(200).json({ message: "Login successful", user: userWithoutPassword });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
 
@@ -143,6 +143,6 @@ export const updateUserController = async (req, res) => {
     res.status(200).json({ message: "Profile updated", user });
   } catch (error) {
     console.error("Update user error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
