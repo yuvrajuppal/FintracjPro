@@ -1,0 +1,10 @@
+model user {
+  uiid        String        @id
+  email     String        @unique(map: "User_email_key")
+  password  String
+  fullName  String
+  currency  String        @default("INR")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+}
