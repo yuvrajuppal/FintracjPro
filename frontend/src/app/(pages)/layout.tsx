@@ -19,6 +19,7 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
   const [showModal, setShowModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const restore = async () => {
@@ -71,10 +72,10 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <Sidebar activePage={activePage} onAddTransaction={() => setShowModal(true)} />
+      <Sidebar activePage={activePage} onAddTransaction={() => { setShowModal(true); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar userName={userfullname || "User"} onLogout={handleLogout} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <Navbar userName={userfullname || "User"} onLogout={handleLogout} onToggleSidebar={() => setIsSidebarOpen((v) => !v)} />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <RefreshContext.Provider value={refreshKey}>
             {children}
           </RefreshContext.Provider>

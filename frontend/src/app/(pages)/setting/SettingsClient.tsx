@@ -6,7 +6,7 @@ import { login } from "@/store/slice/userslice";
 
 function SettingsPage() {
   const dispatch = useAppDispatch();
-  const { userfullname, currency: userCurrency } = useAppSelector((s) => s.userslice);
+  const { userfullname, useremail, currency: userCurrency } = useAppSelector((s) => s.userslice);
   const [fullName, setFullName] = useState(userfullname);
   const [currency, setCurrency] = useState(userCurrency || "INR");
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,18 @@ function SettingsPage() {
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-[980px]">
         <h2 className="text-lg font-bold mb-5 text-gray-900 dark:text-gray-100">Profile Details</h2>
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              value={useremail}
+              disabled
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg text-sm cursor-not-allowed"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Full Name

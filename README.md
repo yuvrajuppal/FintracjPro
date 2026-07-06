@@ -2,7 +2,7 @@
 
 Enterprise Finance — Real-time personal finance tracking application.
 
-Built with an **Express + Prisma** backend and a **Next.js 16** frontend, communicating through a BFF (Backend For Frontend) proxy layer.
+Built with an **Express + Prisma** backend, a **Next.js 16** frontend, and a **React Native** mobile app, communicating through a BFF (Backend For Frontend) proxy layer (web) or direct API calls (mobile).
 
 ---
 
@@ -17,8 +17,9 @@ Built with an **Express + Prisma** backend and a **Next.js 16** frontend, commun
 | **State** | Redux Toolkit (single user slice) |
 | **Charts** | Recharts |
 | **Animation** | Framer Motion, View Transitions API |
-| **Icons** | lucide-react |
+| **Icons** | lucide-react (web), react-native-vector-icons (mobile) |
 | **API Docs** | Swagger Autogen + swagger-ui-express |
+| **Mobile** | React Native 0.86, React Navigation 7, AsyncStorage |
 
 ---
 
@@ -29,7 +30,8 @@ Built with an **Express + Prisma** backend and a **Next.js 16** frontend, commun
 - **Transaction CRUD** — Add transactions via modal, view in table with search & type filter, delete with confirmation dialog
 - **Settings** — Update profile name and currency (INR / USD / EUR / GBP), persists to database
 - **Dark Mode** — Toggle switch with animated View Transitions API (circle, rectangle, polygon, gif, circle-blur variants), click sound effect, persisted preference
-- **BFF Proxy** — All backend requests go through Next.js Route Handlers (`/api/*`) so the backend URL is never exposed to the browser
+- **Mobile App** — Native Android/iOS client with bottom tab navigation, FAB button for adding transactions, profile settings, and direct API calls to the backend
+- **BFF Proxy** — All web frontend requests go through Next.js Route Handlers (`/api/*`) so the backend URL is never exposed to the browser. Mobile app calls the backend directly.
 
 ---
 
@@ -65,12 +67,29 @@ npm run dev
 
 Server starts at `http://localhost:4000`
 
+### 3. Mobile App Setup
+
+```bash
+cd Application
+npm install
+
+# Android
+npm run dev
+
+# iOS
+cd ios && pod install && cd ..
+npm run ios
+```
+
+The mobile app connects directly to the backend at `https://api.fintrackpro.goosecodes.com`. To change this, edit `src/config/baseurl.ts`.
+
 ---
 
 ## Architecture
 
 ### Data Flow
 
+**Web (BFF Proxy):**
 ```
 Browser ──fetch()──> Next.js Route Handler (/api/*)
                           │
@@ -81,7 +100,15 @@ Browser ──fetch()──> Next.js Route Handler (/api/*)
                     Prisma ORM ──> MySQL
 ```
 
-The frontend never directly calls the Express backend. All requests go through Next.js Route Handlers (`src/app/api/`), which forward cookies and proxy to `http://localhost:3000`. This keeps the backend URL hidden from the client.
+**Mobile (Direct):**
+```
+React Native App ──fetch()──> Express API (api.fintrackpro.goosecodes.com)
+                                    │
+                                    ▼
+                              Prisma ORM ──> MySQL
+```
+
+The web frontend never directly calls the Express backend. All requests go through Next.js Route Handlers (`src/app/api/`), which forward cookies and proxy to `http://localhost:3000`. The mobile app calls the backend directly and stores the JWT token in AsyncStorage.
 
 ### API Proxy Routes
 
@@ -194,6 +221,38 @@ frontend/
                 └── [id]/route.js
 ```
 
+### Mobile App (`Application/`)
+
+```
+Application/
+├── package.json
+├── App.tsx                         # Root: Redux Provider + NavigationContainer
+├── src/
+│   ├── config/
+│   │   └── baseurl.ts             # Backend URL (production)
+│   ├── services/
+│   │   └── api.ts                 # API client (auth + transactions, token mgmt)
+│   ├── store/
+│   │   ├── store.ts               # Redux store config
+│   │   ├── hooks.ts               # Typed useAppDispatch / useAppSelector
+│   │   └── slice/
+│   │       └── userslice.ts       # Auth state (login, logout, setCurrency)
+│   ├── components/
+│   │   ├── StackNav.tsx           # Stack navigator (auth check + routing)
+│   │   ├── TabNav.tsx             # Bottom tab navigator + FAB button
+│   │   └── TransactionModal.tsx   # Add transaction bottom sheet
+│   ├── pages/
+│   │   ├── Auth/
+│   │   │   ├── Loginpage.tsx      # Login screen
+│   │   │   └── Signuppage.tsx     # Signup screen
+│   │   ├── Homepage.tsx           # Dashboard (stats, chart, transactions)
+│   │   └── Settingspage.tsx       # Profile settings + logout
+│   └── assets/
+│       └── applogoimage.png       # App logo
+├── android/                        # Android native project
+└── ios/                            # iOS native project
+```
+
 ---
 
 ## Database Models
@@ -245,6 +304,16 @@ The backend URL is configured in `src/config/baseurl.ts`:
 export const baseurl = "http://localhost:3000"
 ```
 
+### Mobile App
+
+The backend URL is configured in `src/config/baseurl.ts`:
+
+```ts
+export const BASE_URL = "https://api.fintrackpro.goosecodes.com";
+```
+
+The mobile app stores the JWT token in AsyncStorage and sends it as a `Cookie` header on subsequent requests.
+
 ---
 
 ## Scripts
@@ -267,3 +336,12 @@ export const baseurl = "http://localhost:3000"
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
+
+### Mobile App
+
+| Command | Description |
+|---|---|
+| `npm run dev` / `npm run android` | Run on Android device/emulator |
+| `npm run ios` | Run on iOS simulator |
+| `npm start` | Start Metro bundler |
+| `npm test` | Run Jest tests |

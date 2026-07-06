@@ -125,7 +125,7 @@ function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-6">
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
             <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -174,7 +174,7 @@ function DashboardPage() {
       </div>
 
       {/* Chart + Preferences row */}
-      <div className="grid grid-cols-[1fr_280px] gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 mb-6">
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Cash Flow Analysis</h2>
           <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
@@ -265,7 +265,8 @@ function DashboardPage() {
         ) : transactions.length === 0 ? (
           <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">No transactions yet.</p>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider pb-3">Date</th>
@@ -296,6 +297,7 @@ function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

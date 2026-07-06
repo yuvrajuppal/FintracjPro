@@ -4,4 +4,4 @@ export const prisma = new PrismaClient({
 adapter: new PrismaMariaDb(process.env.DATABASE_URL),
 });
 
-export const productionmode  = true
+export const productionmode  = false

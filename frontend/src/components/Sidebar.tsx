@@ -6,11 +6,26 @@ import Link from "next/link";
 interface SidebarProps {
   activePage: string;
   onAddTransaction?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ activePage, onAddTransaction }: SidebarProps) {
+export default function Sidebar({ activePage, onAddTransaction, isOpen, onClose }: SidebarProps) {
   return (
-    <aside className="w-[190px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col shrink-0">
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={onClose}>
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        w-[190px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col shrink-0
+        fixed md:static inset-y-0 left-0 z-50 transition-transform duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
       <div className="px-5 pt-5 pb-2">
         <div className="flex items-center gap-2">
           <svg className="w-7 h-7 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -63,6 +78,20 @@ export default function Sidebar({ activePage, onAddTransaction }: SidebarProps) 
           Add Transaction
         </button>
       </div>
+      {/* Close button inside sidebar on mobile */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 md:hidden"
+      >
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fillRule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
     </aside>
+    </>
   );
 }
