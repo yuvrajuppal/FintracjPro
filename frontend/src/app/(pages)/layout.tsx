@@ -15,7 +15,7 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loginstate, userfullname } = useAppSelector((s) => s.userslice);
-  const activePage = pathname === "/setting" ? "settings" : "dashboard";
+  const activePage = pathname === "/setting" ? "settings" : pathname === "/downloadapp" ? "downloadapp" : "dashboard";
   const [showModal, setShowModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);

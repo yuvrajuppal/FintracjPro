@@ -1,4 +1,4 @@
-package com.application
+package com.fintrackpro.goosecodes
 
 import android.app.Application
 import com.facebook.react.PackageList

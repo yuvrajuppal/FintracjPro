@@ -3,6 +3,7 @@ import {
   addTransaction,
   getTransactions,
   deleteTransaction,
+  deleteAllTransactions,
   getTransactionSummary,
 } from "../controller/money.controller.js";
 
@@ -12,5 +13,6 @@ router.post("/addTransaction", addTransaction);
 router.get("/getTransactions", getTransactions);
 router.get("/getTransactionSummary", getTransactionSummary);
 router.delete("/deleteTransaction/:id", deleteTransaction);
+router.delete("/deleteAllTransactions", deleteAllTransactions);
 
 export default router;

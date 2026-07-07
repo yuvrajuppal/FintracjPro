@@ -38,6 +38,7 @@ function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
   const { isDark, toggleTheme } = useThemeToggle();
   const { currency } = useAppSelector((s) => s.userslice);
   const sym: Record<string, string> = { INR: "₹", USD: "$", EUR: "€", GBP: "£" };
@@ -103,6 +104,21 @@ function DashboardPage() {
       // ignore
     } finally {
       setDeleteTarget(null);
+    }
+  };
+
+  const handleResetAll = () => {
+    setShowResetModal(true);
+  };
+
+  const confirmResetAll = async () => {
+    try {
+      const res = await fetch("/api/transactions/delete-all", { method: "DELETE" });
+      if (res.ok) fetchData();
+    } catch {
+      // ignore
+    } finally {
+      setShowResetModal(false);
     }
   };
 
@@ -224,7 +240,7 @@ function DashboardPage() {
             </button>
           </div>
           <hr className="border-gray-100 dark:border-gray-700 mb-5" />
-          <button className="w-full flex items-center justify-center gap-2 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium py-2.5 rounded-lg transition-colors">
+          <button onClick={handleResetAll} className="w-full flex items-center justify-center gap-2 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium py-2.5 rounded-lg transition-colors">
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
@@ -327,6 +343,38 @@ function DashboardPage() {
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset All Data confirmation modal */}
+      {showResetModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70"
+          onClick={() => setShowResetModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Reset All Data</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Are you sure you want to delete all transactions? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                No
+              </button>
+              <button
+                onClick={confirmResetAll}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+              >
+                Yes, Delete All
               </button>
             </div>
           </div>

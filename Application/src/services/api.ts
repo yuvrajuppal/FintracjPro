@@ -181,6 +181,12 @@ export async function deleteTransaction(id: string): Promise<void> {
   });
 }
 
+export async function deleteAllTransactions(): Promise<void> {
+  await apiFetch("/moneyRoutes/deleteAllTransactions", {
+    method: "DELETE",
+  });
+}
+
 export async function getTransactionSummary(): Promise<Summary> {
   const { data } = await apiFetch<Summary>(
     "/moneyRoutes/getTransactionSummary"

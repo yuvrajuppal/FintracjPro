@@ -108,6 +108,24 @@ export const deleteTransaction = async (req, res) => {
   }
 };
 
+export const deleteAllTransactions = async (req, res) => {
+  try {
+    const user = await getUserFromToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const result = await prisma.transaction.deleteMany({
+      where: { userId: user.uiid },
+    });
+
+    res.status(200).json({ message: "All transactions deleted", count: result.count });
+  } catch (error) {
+    console.error("Delete all transactions error:", error);
+    res.status(500).json({ error: "Internal server error", message: error.message });
+  }
+};
+
 export const getTransactionSummary = async (req, res) => {
   try {
     const user = await getUserFromToken(req);

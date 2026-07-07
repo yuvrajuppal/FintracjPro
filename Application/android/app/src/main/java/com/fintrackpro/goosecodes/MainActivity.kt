@@ -1,4 +1,4 @@
-package com.application
+package com.fintrackpro.goosecodes
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

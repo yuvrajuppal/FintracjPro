@@ -9,14 +9,16 @@ import {
   Dimensions,
   StatusBar,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { BarChart } from "react-native-chart-kit";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useAppSelector } from "../store/hooks";
 import {
   getTransactions,
   getTransactionSummary,
   deleteTransaction,
+  deleteAllTransactions,
   Transaction,
   Summary,
 } from "../services/api";
@@ -36,6 +38,8 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<Summary>({
     totalBalance: 0,
@@ -65,6 +69,12 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
     fetchData();
   }, [fetchData, refreshKey]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, [fetchData]);
+
   const chartData = useMemo(() => {
     const grouped: Record<string, { income: number; expense: number }> = {};
     for (const t of transactions) {
@@ -75,10 +85,13 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
       else grouped[key].expense += t.amount;
     }
     const entries = Object.entries(grouped);
+    const allValues = entries.flatMap(([, v]) => [v.income, v.expense]);
+    const maxVal = Math.max(...allValues, 1);
     return {
       labels: entries.map(([month]) => month),
       incomeData: entries.map(([, v]) => v.income),
       expenseData: entries.map(([, v]) => v.expense),
+      maxVal,
     };
   }, [transactions]);
 
@@ -103,19 +116,49 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
     }
   };
 
+  const handleResetAll = () => {
+    setShowResetModal(true);
+  };
+
+  const confirmResetAll = async () => {
+    try {
+      await deleteAllTransactions();
+      fetchData();
+    } catch {
+      // ignore
+    } finally {
+      setShowResetModal(false);
+    }
+  };
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Financial Overview</Text>
-          <Text style={styles.headerSubtitle}>
-            Real-time tracking application
-          </Text>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.headerTitle}>Financial Overview</Text>
+              <Text style={styles.headerSubtitle}>
+                Real-time tracking application
+              </Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.refreshBtn} onPress={fetchData}>
+                <MaterialIcons name="refresh" size={18} color="#6b7280" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.resetBtn} onPress={handleResetAll}>
+                <Text style={styles.resetBtnText}>Reset All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Stat Cards */}
@@ -181,34 +224,62 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
               </View>
             ) : (
               <View>
-                <BarChart
-                  data={{
-                    labels: chartData.labels,
-                    datasets: [
-                      { data: chartData.incomeData, color: () => "#16a34a" },
-                      { data: chartData.expenseData, color: () => "#dc2626" },
-                    ],
-                  }}
-                  width={screenWidth - 80}
-                  height={200}
-                  yAxisLabel={curSym}
-                  yAxisSuffix=""
-                  chartConfig={{
-                    backgroundColor: "#ffffff",
-                    backgroundGradientFrom: "#ffffff",
-                    backgroundGradientTo: "#ffffff",
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    labelColor: () => "#6b7280",
-                    barPercentage: 0.6,
-                    propsForBackgroundLines: {
-                      strokeDasharray: "5,5",
-                      stroke: "#f0f0f0",
-                    },
-                  }}
-                  style={styles.chart}
-                  fromZero
-                />
+                {/* Y-axis labels + Bars */}
+                <View style={styles.chartArea}>
+                  <View style={styles.yAxis}>
+                    {[4, 3, 2, 1, 0].map((i) => (
+                      <Text key={i} style={styles.yLabel}>
+                        {curSym}{Math.round((chartData.maxVal * i) / 4)}
+                      </Text>
+                    ))}
+                  </View>
+                  <View style={styles.barsContainer}>
+                    {/* Grid lines */}
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <View
+                        key={i}
+                        style={[styles.gridLine, { bottom: `${i * 25}%` }]}
+                      />
+                    ))}
+                    {/* Bar groups */}
+                    <View style={styles.barGroupsRow}>
+                      {chartData.labels.map((label, idx) => (
+                        <View key={label} style={styles.barGroup}>
+                          <View style={styles.barsPair}>
+                            <View
+                              style={[
+                                styles.bar,
+                                styles.barIncome,
+                                {
+                                  height: `${
+                                    chartData.maxVal > 0
+                                      ? (chartData.incomeData[idx] / chartData.maxVal) * 100
+                                      : 0
+                                  }%`,
+                                },
+                              ]}
+                            />
+                            <View
+                              style={[
+                                styles.bar,
+                                styles.barExpense,
+                                {
+                                  height: `${
+                                    chartData.maxVal > 0
+                                      ? (chartData.expenseData[idx] / chartData.maxVal) * 100
+                                      : 0
+                                  }%`,
+                                },
+                              ]}
+                            />
+                          </View>
+                          <Text style={styles.xLabel}>{label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+                {/* Legend */}
                 <View style={styles.legendRow}>
                   <View style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: "#16a34a" }]} />
@@ -336,6 +407,38 @@ const Homepage = ({ refreshKey = 0 }: HomepageProps) => {
           </View>
         </View>
       </Modal>
+
+      {/* Reset All Data Confirmation Modal */}
+      <Modal
+        visible={showResetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowResetModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Reset All Data</Text>
+            <Text style={styles.modalBody}>
+              Are you sure you want to delete all transactions? This action
+              cannot be undone.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowResetModal(false)}
+              >
+                <Text style={styles.modalCancelText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalDeleteBtn}
+                onPress={confirmResetAll}
+              >
+                <Text style={styles.modalDeleteText}>Yes, Delete All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -366,6 +469,39 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6b7280",
     marginTop: 2,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  refreshBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetBtn: {
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    backgroundColor: "#fef2f2",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  resetBtnText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#dc2626",
   },
   statGrid: {
     flexDirection: "row",
@@ -412,13 +548,67 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#f3f4f6",
     borderRadius: 8,
-    padding: 8,
+    padding: 12,
     marginTop: 12,
-    alignItems: "center",
   },
-  chart: {
-    borderRadius: 8,
-    marginLeft: -16,
+  chartArea: {
+    flexDirection: "row",
+    height: 180,
+  },
+  yAxis: {
+    width: 40,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingRight: 6,
+  },
+  yLabel: {
+    fontSize: 10,
+    color: "#9ca3af",
+  },
+  barsContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    position: "relative",
+  },
+  gridLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "#f3f4f6",
+  },
+  barGroupsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "flex-end",
+    height: "100%",
+    paddingHorizontal: 8,
+  },
+  barGroup: {
+    alignItems: "center",
+    flex: 1,
+  },
+  barsPair: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 4,
+    height: "100%",
+  },
+  bar: {
+    width: 18,
+    borderRadius: 4,
+  },
+  barIncome: {
+    backgroundColor: "#16a34a",
+  },
+  barExpense: {
+    backgroundColor: "#dc2626",
+  },
+  xLabel: {
+    fontSize: 10,
+    color: "#6b7280",
+    marginTop: 6,
+    textAlign: "center",
   },
   legendRow: {
     flexDirection: "row",
